@@ -65,7 +65,7 @@ if uploaded_file is not None:
 
     if suggestions:
         suggestion_df = pd.DataFrame(suggestions, columns=["X-axis", "Y-axis", "Suggested Chart"])
-        st.dataframe(suggest
+        st.dataframe(suggest)
 
 
 
