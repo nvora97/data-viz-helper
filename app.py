@@ -41,7 +41,26 @@ if uploaded_file is not None:
     columns_to_check = st.multiselect("Check duplicates in specific columns", df.columns)
     if columns_to_check:
         duplicates = df[df.duplicated(subset=columns_to_check)]
-        st.write(f"Duplicate Rows based on sele
+        st.write(f"Duplicate Rows based on selected columns: {len(duplicates)}")
+        if not duplicates.empty:
+            st.dataframe(duplicates)
+
+    # --- Suggested X/Y pairs ---
+    st.write("### Suggested X/Y Column Pairs")
+    suggestions = []
+    for x_col in df.columns:
+        for y_col in df.columns:
+            if x_col == y_col:
+                continue
+
+            x_dtype = df[x_col].dtype
+            y_dtype = df[y_col].dtype
+            suggested_chart = None
+
+            # Categorical → X-axis, numeric → Y-axis
+            if pd.api.types.is_numeric_dtype(y_dtype) and pd.api.types.is_object_dtype(x_dtype):
+                suggested_chart = "Bar / Column Chart"
+            elif pd.api.types.is_numeric_dtype(x_dtype) and pd.api.types.is_numeric_dtype(y_dt
 
 
 
