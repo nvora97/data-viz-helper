@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 
 st.title("📊 Data Visualisation Helper")
+st.write("Upload a CSV or Excel file and get suggestions for X/Y columns and chart types!")
 
-st.write("Upload a CSV or Excel file and I'll suggest visualisations based on your columns!")
-
-uploaded_file = st.file_uploader("Upload your file", type=["csv", "xlsx"])
+# File upload
+uploaded_file = st.file_uploader("Upload your CSV or Excel file", type=["csv", "xlsx"])
 
 if uploaded_file is not None:
     # Load file
@@ -17,15 +17,34 @@ if uploaded_file is not None:
     st.write("### Preview of your data")
     st.dataframe(df.head())
 
-    # Suggest visualisations
-    st.write("### Suggested Visualisations")
+    # Detect column types
+    numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+    categorical_cols = df.select_dtypes(include=['object']).columns.tolist()
+    date_cols = df.select_dtypes(include=['datetime64', 'datetime']).columns.tolist()
 
-    for col in df.columns:
-        dtype = df[col].dtype
-        
-        if dtype == "object":
-            st.write(f"🟦 **{col}** → Bar Chart, Pie Chart")
-        elif pd.api.types.is_numeric_dtype(dtype):
-            st.write(f"🟥 **{col}** → Line Chart, Histogram, Scatter Plot")
-        else:
-            st.write(f"⬜ **{col}** → Other/Custom Visualisation")
+    # Suggest X/Y combinations
+    st.write("### Suggested X/Y column pairs and chart types")
+    suggestions = []
+
+    for x_col in df.columns:
+        for y_col in numeric_cols:  # Y-axis must be numeric
+            if x_col == y_col:
+                continue  # skip same column
+            # Determine chart type
+            if x_col in date_cols:
+                chart_type = "Line / Area chart (Time Series)"
+            elif x_col in categorical_cols:
+                chart_type = "Bar chart / Column chart"
+            elif x_col in numeric_cols:
+                chart_type = "Scatter plot"
+            else:
+                chart_type = "Other / Custom"
+            suggestions.append((x_col, y_col, chart_type))
+
+    # Display suggestions in table
+    if suggestions:
+        suggestion_df = pd.DataFrame(suggestions, columns=["X-axis", "Y-axis", "Suggested Chart"])
+        st.dataframe(suggestion_df)
+    else:
+        st.write("No valid column pairs found for suggestions.")
+
