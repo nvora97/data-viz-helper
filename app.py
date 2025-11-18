@@ -28,14 +28,11 @@ if uploaded_file is not None:
 
     # --- Duplicate Detection ---
     st.write("### Duplicate Detection")
-
-    # Full row duplicates
     duplicate_rows = df[df.duplicated()]
     st.write(f"Duplicate Rows (exact match across all columns): {len(duplicate_rows)}")
     if not duplicate_rows.empty:
         st.dataframe(duplicate_rows)
 
-    # Optional: duplicates by selected columns
     columns_to_check = st.multiselect("Check duplicates in specific columns", df.columns)
     if columns_to_check:
         duplicates = df[df.duplicated(subset=columns_to_check)]
@@ -43,7 +40,7 @@ if uploaded_file is not None:
         if not duplicates.empty:
             st.dataframe(duplicates)
 
-    # --- Suggested X/Y pairs ---
+    # --- Suggested X/Y pairs with categorical → X, numeric → Y ---
     st.write("### Suggested X/Y Column Pairs")
     suggestions = []
     for x_col in df.columns:
@@ -55,13 +52,12 @@ if uploaded_file is not None:
             y_dtype = df[y_col].dtype
             suggested_chart = None
 
-            # Simple rules for suggestions
-            if pd.api.types.is_numeric_dtype(y_dtype):
-                if pd.api.types.is_categorical_dtype(x_dtype):
-                    suggested_chart = "Bar / Column Chart"
-                elif pd.api.types.is_numeric_dtype(x_dtype):
-                    suggested_chart = "Scatter Plot"
-            elif pd.api.types.is_categorical_dtype(y_dtype) and pd.api.types.is_categorical_dtype(x_dtype):
+            # Enforce categorical/object → X, numeric → Y
+            if pd.api.types.is_numeric_dtype(y_dtype) and pd.api.types.is_object_dtype(x_dtype):
+                suggested_chart = "Bar / Column Chart"
+            elif pd.api.types.is_numeric_dtype(x_dtype) and pd.api.types.is_numeric_dtype(y_dtype):
+                suggested_chart = "Scatter Plot"
+            elif pd.api.types.is_object_dtype(x_dtype) and pd.api.types.is_object_dtype(y_dtype):
                 suggested_chart = "Grouped Bar / Heatmap"
 
             if suggested_chart:
@@ -69,9 +65,8 @@ if uploaded_file is not None:
 
     if suggestions:
         suggestion_df = pd.DataFrame(suggestions, columns=["X-axis", "Y-axis", "Suggested Chart"])
-        st.dataframe(suggestion_df)
-    else:
-        st.write("No valid column pairs found.")
+        st.dataframe(suggest
+
 
 
 
