@@ -2,7 +2,9 @@ import streamlit as st
 import pandas as pd
 
 st.title("📊 Data Visualisation Helper")
-st.write("Upload a CSV or Excel file to get column type detection, X/Y suggestions, and duplicate detection.")
+st.write(
+    "Upload a CSV or Excel file to get column type detection, X/Y suggestions, and duplicate detection."
+)
 
 # --- File Upload ---
 uploaded_file = st.file_uploader("Upload CSV or Excel", type=["csv", "xlsx"])
@@ -28,11 +30,14 @@ if uploaded_file is not None:
 
     # --- Duplicate Detection ---
     st.write("### Duplicate Detection")
+
+    # Full row duplicates
     duplicate_rows = df[df.duplicated()]
     st.write(f"Duplicate Rows (exact match across all columns): {len(duplicate_rows)}")
     if not duplicate_rows.empty:
         st.dataframe(duplicate_rows)
 
+    # Optional: duplicates by selected columns
     columns_to_check = st.multiselect("Check duplicates in specific columns", df.columns)
     if columns_to_check:
         duplicates = df[df.duplicated(subset=columns_to_check)]
@@ -52,7 +57,7 @@ if uploaded_file is not None:
             y_dtype = df[y_col].dtype
             suggested_chart = None
 
-            # Enforce categorical/object → X, numeric → Y
+            # Enforce categorical/object → X-axis, numeric → Y-axis
             if pd.api.types.is_numeric_dtype(y_dtype) and pd.api.types.is_object_dtype(x_dtype):
                 suggested_chart = "Bar / Column Chart"
             elif pd.api.types.is_numeric_dtype(x_dtype) and pd.api.types.is_numeric_dtype(y_dtype):
@@ -65,7 +70,10 @@ if uploaded_file is not None:
 
     if suggestions:
         suggestion_df = pd.DataFrame(suggestions, columns=["X-axis", "Y-axis", "Suggested Chart"])
-        st.dataframe(suggest)
+        st.dataframe(suggestion_df)
+    else:
+        st.write("No valid column pairs found.")
+
 
 
 
