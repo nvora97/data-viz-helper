@@ -1,14 +1,14 @@
 import streamlit as st
 import pandas as pd
 
-st.title("📊 Data Visualisation Helper")
-st.write("Upload a CSV or Excel file and get X/Y column suggestions with chart types!")
+st.title("📊 Data Analysis Helper - Statistics & X/Y Suggestions")
+st.write("Upload a CSV or Excel file to analyze your dataset with statistics, correlations, and suggestions.")
 
-# File upload
+# --- File Upload ---
 uploaded_file = st.file_uploader("Upload CSV or Excel", type=["csv", "xlsx"])
 
 if uploaded_file is not None:
-    # Load file with date parsing
+    # --- Load File ---
     try:
         if uploaded_file.name.endswith(".csv"):
             df = pd.read_csv(uploaded_file, parse_dates=True, dayfirst=True, infer_datetime_format=True)
@@ -21,7 +21,7 @@ if uploaded_file is not None:
     st.write("### Preview of your data")
     st.dataframe(df.head())
 
-    # Detect column types
+    # --- Column Types ---
     st.write("### Column Types Detected")
     st.write(df.dtypes)
 
@@ -29,39 +29,11 @@ if uploaded_file is not None:
     categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
     date_cols = df.select_dtypes(include=['datetime64', 'datetime']).columns.tolist()
 
-    # Suggest X/Y combinations
-    st.write("### Suggested X/Y column pairs and chart types")
-    suggestions = []
-
-    for x_col in df.columns:
-        for y_col in df.columns:
-            if x_col == y_col:
-                continue
-
-            x_dtype = df[x_col].dtype
-            y_dtype = df[y_col].dtype
-            chart_type = None
-
-            # Numeric Y-axis
-            if pd.api.types.is_numeric_dtype(y_dtype):
-                if pd.api.types.is_datetime64_dtype(x_dtype):
-                    chart_type = "Line / Area chart (Time Series)"
-                elif pd.api.types.is_categorical_dtype(x_dtype):
-                    chart_type = "Bar chart / Column chart"
-                elif pd.api.types.is_numeric_dtype(x_dtype):
-                    chart_type = "Scatter plot"
-            # Categorical Y-axis + Categorical X-axis
-            elif pd.api.types.is_categorical_dtype(y_dtype) and pd.api.types.is_categorical_dtype(x_dtype):
-                chart_type = "Heatmap / Grouped Bar Chart"
-
-            if chart_type:
-                suggestions.append((x_col, y_col, chart_type))
-
-    if suggestions:
-        suggestion_df = pd.DataFrame(suggestions, columns=["X-axis", "Y-axis", "Suggested Chart"])
-        st.dataframe(suggestion_df)
-    else:
-        st.write("No valid column pairs found. Check your data types or clean missing values.")
+    # --- Descriptive Statistics ---
+    st.write("### Descriptive Statistics")
+    if numeric_cols:
+        st.write("**Numeric Columns**")
+        st.da
 
 
 
