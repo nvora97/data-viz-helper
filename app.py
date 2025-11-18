@@ -38,7 +38,19 @@ if uploaded_file is not None:
         st.dataframe(duplicate_rows)
 
     # Optional: duplicates by selected columns
-    columns_to_check = st.multiselect("Chec
+    columns_to_check = st.multiselect(
+        "Check duplicates in specific columns", df.columns
+    )
+    if columns_to_check:
+        duplicates = df[df.duplicated(subset=columns_to_check)]
+        st.write(f"Duplicate Rows based on selected columns: {len(duplicates)}")
+        if not duplicates.empty:
+            st.dataframe(duplicates)
+
+    # --- Suggested X/Y pairs ---
+    st.write("### Suggested X/Y Column Pairs")
+    suggestio
+
 
 
 
