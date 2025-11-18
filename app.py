@@ -2,37 +2,50 @@ import streamlit as st
 import pandas as pd
 
 st.title("📊 Data Visualisation Helper")
-st.write("Upload a CSV or Excel file and get X/Y column suggestions with chart types!")
+st.write("Upload a CSV or Excel file to get column type detection, X/Y suggestions, and duplicate detection.")
 
-# File upload
+# --- File Upload ---
 uploaded_file = st.file_uploader("Upload CSV or Excel", type=["csv", "xlsx"])
 
 if uploaded_file is not None:
-    # Load file with date parsing
+    # --- Load File ---
     try:
         if uploaded_file.name.endswith(".csv"):
-            df = pd.read_csv(uploaded_file, parse_dates=True, dayfirst=True, infer_datetime_format=True)
+            df = pd.read_csv(uploaded_file)
         else:
-            df = pd.read_excel(uploaded_file, parse_dates=True)
+            df = pd.read_excel(uploaded_file)
     except Exception as e:
         st.error(f"Error loading file: {e}")
         st.stop()
 
+    # --- Preview Data ---
     st.write("### Preview of your data")
     st.dataframe(df.head())
 
-    # Detect column types
+    # --- Column Types ---
     st.write("### Column Types Detected")
     st.write(df.dtypes)
 
-    numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
-    categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
-    date_cols = df.select_dtypes(include=['datetime64', 'datetime']).columns.tolist()
+    # --- Duplicate Detection ---
+    st.write("### Duplicate Detection")
 
-    # Suggest X/Y combinations
-    st.write("### Suggested X/Y column pairs and chart types")
+    # Full row duplicates
+    duplicate_rows = df[df.duplicated()]
+    st.write(f"Duplicate Rows (exact match across all columns): {len(duplicate_rows)}")
+    if not duplicate_rows.empty:
+        st.dataframe(duplicate_rows)
+
+    # Optional: duplicates by selected columns
+    columns_to_check = st.multiselect("Check duplicates in specific columns", df.columns)
+    if columns_to_check:
+        duplicates = df[df.duplicated(subset=columns_to_check)]
+        st.write(f"Duplicate Rows based on selected columns: {len(duplicates)}")
+        if not duplicates.empty:
+            st.dataframe(duplicates)
+
+    # --- Suggested X/Y pairs ---
+    st.write("### Suggested X/Y Column Pairs")
     suggestions = []
-
     for x_col in df.columns:
         for y_col in df.columns:
             if x_col == y_col:
@@ -40,28 +53,26 @@ if uploaded_file is not None:
 
             x_dtype = df[x_col].dtype
             y_dtype = df[y_col].dtype
-            chart_type = None
+            suggested_chart = None
 
-            # Numeric Y-axis
+            # Simple rules for suggestions
             if pd.api.types.is_numeric_dtype(y_dtype):
-                if pd.api.types.is_datetime64_dtype(x_dtype):
-                    chart_type = "Line / Area chart (Time Series)"
-                elif pd.api.types.is_categorical_dtype(x_dtype):
-                    chart_type = "Bar chart / Column chart"
+                if pd.api.types.is_categorical_dtype(x_dtype):
+                    suggested_chart = "Bar / Column Chart"
                 elif pd.api.types.is_numeric_dtype(x_dtype):
-                    chart_type = "Scatter plot"
-            # Categorical Y-axis + Categorical X-axis
+                    suggested_chart = "Scatter Plot"
             elif pd.api.types.is_categorical_dtype(y_dtype) and pd.api.types.is_categorical_dtype(x_dtype):
-                chart_type = "Heatmap / Grouped Bar Chart"
+                suggested_chart = "Grouped Bar / Heatmap"
 
-            if chart_type:
-                suggestions.append((x_col, y_col, chart_type))
+            if suggested_chart:
+                suggestions.append((x_col, y_col, suggested_chart))
 
     if suggestions:
         suggestion_df = pd.DataFrame(suggestions, columns=["X-axis", "Y-axis", "Suggested Chart"])
         st.dataframe(suggestion_df)
     else:
-        st.write("No valid column pairs found. Check your data types or clean missing values.")
+        st.write("No valid column pairs found.")
+
 
 
 
