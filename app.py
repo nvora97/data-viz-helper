@@ -1,3 +1,11 @@
+import streamlit as st
+import pandas as pd
+
+st.title("📊 Data Visualisation Helper")
+st.write("Upload a CSV or Excel file to get column type detection, X/Y suggestions, duplicate detection, and aggregation.")
+
+
+
 # --- Data Aggregation ---
 st.write("### Data Aggregation")
 
