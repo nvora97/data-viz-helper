@@ -38,9 +38,7 @@ if uploaded_file is not None:
         st.dataframe(duplicate_rows)
 
     # Optional: duplicates by selected columns
-    columns_to_check = st.multiselect(
-        "Check duplicates in specific columns", df.columns
-    )
+    columns_to_check = st.multiselect("Check duplicates in specific columns", df.columns)
     if columns_to_check:
         duplicates = df[df.duplicated(subset=columns_to_check)]
         st.write(f"Duplicate Rows based on selected columns: {len(duplicates)}")
@@ -49,8 +47,55 @@ if uploaded_file is not None:
 
     # --- Suggested X/Y pairs ---
     st.write("### Suggested X/Y Column Pairs")
-    suggestio
+    suggestions = []
+    for x_col in df.columns:
+        for y_col in df.columns:
+            if x_col == y_col:
+                continue
 
+            x_dtype = df[x_col].dtype
+            y_dtype = df[y_col].dtype
+            suggested_chart = None
+
+            # Categorical → X-axis, numeric → Y-axis
+            if pd.api.types.is_numeric_dtype(y_dtype) and pd.api.types.is_object_dtype(x_dtype):
+                suggested_chart = "Bar / Column Chart"
+            elif pd.api.types.is_numeric_dtype(x_dtype) and pd.api.types.is_numeric_dtype(y_dtype):
+                suggested_chart = "Scatter Plot"
+            elif pd.api.types.is_object_dtype(x_dtype) and pd.api.types.is_object_dtype(y_dtype):
+                suggested_chart = "Grouped Bar / Heatmap"
+
+            if suggested_chart:
+                suggestions.append((x_col, y_col, suggested_chart))
+
+    if suggestions:
+        suggestion_df = pd.DataFrame(suggestions, columns=["X-axis", "Y-axis", "Suggested Chart"])
+        st.dataframe(suggestion_df)
+    else:
+        st.write("No valid column pairs found.")
+
+    # --- Data Aggregation ---
+    st.write("### Data Aggregation")
+
+    # Identify numeric and categorical/object columns
+    numeric_cols = df.select_dtypes(include="number").columns.tolist()
+    object_cols = df.select_dtypes(include="object").columns.tolist()
+
+    if object_cols:
+        group_col = st.selectbox("Select a column to group by", options=object_cols)
+        agg_func = st.selectbox(
+            "Select aggregation function",
+            options=["sum", "mean", "median", "min", "max", "count"]
+        )
+
+        if numeric_cols:
+            aggregated = df.groupby(group_col)[numeric_cols].agg(agg_func)
+            st.write(f"### Aggregated data by `{group_col}` using `{agg_func}`")
+            st.dataframe(aggregated)
+        else:
+            st.write("No numeric columns to aggregate.")
+    else:
+        st.write("No categorical/object columns to group by.")
 
 
 
